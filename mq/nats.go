@@ -1,4 +1,6 @@
-package rpckit_mq
+// This file holds support funcs for protoc-gen-nrpc
+
+package mq
 
 import (
 	"context"
