@@ -1,27 +1,27 @@
-package rpckit_log
+package debug
 
 import (
 	"github.com/mattn/go-colorable"
-	log "go.uber.org/zap"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 // setupLog creates logger
-func New(debug bool) *log.Logger {
+func NewLogger(debug bool) *zap.Logger {
 
-	var l *log.Logger
+	var l *zap.Logger
 
-	aa := log.NewDevelopmentEncoderConfig()
+	aa := zap.NewDevelopmentEncoderConfig()
 	aa.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	l = log.New(zapcore.NewCore(
+	l = zap.New(zapcore.NewCore(
 		zapcore.NewConsoleEncoder(aa),
 		zapcore.AddSync(colorable.NewColorableStdout()),
 		zapcore.DebugLevel,
 	),
-		log.AddCaller(),
+		zap.AddCaller(),
 	)
 
-	//		l, _ = log.NewProduction()
+	//		l, _ = zap.NewProduction()
 
 	//	r.Use(ginzap.Ginzap(l, time.RFC3339, false))
 

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+//option go_package = "stage1/gars/proto";
+
+package ticker;
+
+import "google/protobuf/timestamp.proto";
+
+message TimeRequest {
+    // интервал обновления (сек)
+    int32 every = 1;
+  }
+  
+  message TimeResponse {
+    google.protobuf.Timestamp ts = 1;
+  }
+  

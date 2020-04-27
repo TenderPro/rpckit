@@ -1,4 +1,4 @@
-package rpckit_soap
+package soap
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	log "go.uber.org/zap"
 
 	"github.com/UNO-SOFT/grpcer"
-	"github.com/UNO-SOFT/soap-proxy"
+	soapproxy "github.com/UNO-SOFT/soap-proxy"
 	"google.golang.org/grpc"
 )
 
@@ -51,11 +51,11 @@ X-Forwarded-Proto:[http]
 
 */
 
-func (srv Service) SetupRouter(mux *http.ServeMux) {
+func (srv Service) SetupRouter(mux *http.ServeMux, client grpcer.Client, WSDL string) {
 	addr := fmt.Sprintf("://%s/%s", srv.Host, srv.Config.Prefix)
 	handler := &soapproxy.SOAPHandler{
-		Client:    NewClient(srv.Server),
-		WSDL:      soapproxy.Ungzb64(WSDLgzb64),
+		Client:    client,
+		WSDL:      soapproxy.Ungzb64(WSDL),
 		Locations: []string{"http" + addr, "https" + addr},
 		Log: func(keyvals ...interface{}) error {
 			srv.Log.Warn("--- SOAP ---")
