@@ -9,6 +9,8 @@ import "google/protobuf/timestamp.proto";
 message TimeRequest {
     // интервал обновления (сек)
     int32 every = 1;
+    // количество ответов
+    int32 max = 2;
   }
   
   message TimeResponse {

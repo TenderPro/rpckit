@@ -14,6 +14,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.14.4
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/mattn/go-colorable v0.1.6
+	github.com/nats-io/go-nats v1.7.2
 	github.com/nats-io/nats.go v1.9.2
 	github.com/nats-rpc/nrpc v0.0.0-20190920042445-3ae2c6c6aad4
 	github.com/opentracing/opentracing-go v1.1.0

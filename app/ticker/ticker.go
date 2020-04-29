@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	//	"github.com/nats-io/go-nats"
-	"github.com/nats-rpc/nrpc"
+	"github.com/nats-io/nats.go"
+	"github.com/opentracing/opentracing-go"
+
 	//	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
@@ -15,7 +16,7 @@ import (
 )
 
 // Run publishes time ticks to NATS channel with given subject
-func Run(ctx context.Context, log *zap.Logger, nc nrpc.NatsConn, subject string) error {
+func Run(ctx context.Context, log *zap.Logger, nc *nats.Conn, subject string) error {
 	t := time.NewTicker(time.Second * 1)
 	for {
 		select {
@@ -42,11 +43,23 @@ func Run(ctx context.Context, log *zap.Logger, nc nrpc.NatsConn, subject string)
 	}
 }
 
-/*
+type Service struct {
+	subject string
+	log     *zap.Logger
+	mq      *nats.Conn
+}
+type TimeServiceServer interface {
+	Send(data *TimeResponse) error
+	Context() context.Context
+}
+
+func New(log *zap.Logger, mq *nats.Conn, subject string) *Service {
+	return &Service{subject: subject, log: log, mq: mq}
+}
+
 // TimeService is a gRPC service for ticker
-func (p Service) TimeService(in *proto.TimeRequest, stream proto.TestService_TimeServiceServer) error {
+func (p Service) TimeService(in *TimeRequest, stream TimeServiceServer) error {
 	p.log.Debug("--- TimeService ---")
-	i := 0
 
 	ch := make(chan *nats.Msg, 64)
 	sub, err := p.mq.ChanSubscribe(p.subject, ch)
@@ -63,6 +76,7 @@ func (p Service) TimeService(in *proto.TimeRequest, stream proto.TestService_Tim
 		defer span.Finish()
 	}
 	first := true
+	var i int32
 	for {
 		select {
 		case <-ctx.Done():
@@ -71,10 +85,10 @@ func (p Service) TimeService(in *proto.TimeRequest, stream proto.TestService_Tim
 		case msg := <-ch:
 			//	p.mq.Subscribe(subj, func(msg *nats.Msg) {
 			i += 1
-			p.log.Debug("Receive", zap.Int("#", i), zap.String("subject", msg.Subject))
+			p.log.Debug("Receive", zap.Int32("#", i), zap.String("subject", msg.Subject))
 			span.LogKV("event", i)
 
-			data := &proto.TimeResponse{}
+			data := &TimeResponse{}
 			err = gproto.Unmarshal(msg.Data, data)
 			if err != nil {
 				fmt.Printf("err01: %v\n", err)
@@ -91,8 +105,11 @@ func (p Service) TimeService(in *proto.TimeRequest, stream proto.TestService_Tim
 				}
 			}
 		}
+		if in.Max > 0 && in.Max < i {
+			break
+		}
+		i++
 	}
 	//	})
 	return nil
 }
-*/
