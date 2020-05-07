@@ -13,7 +13,6 @@ message TimeRequest {
     int32 max = 2;
   }
   
-  message TimeResponse {
-    google.protobuf.Timestamp ts = 1;
-  }
-  
+message TimeResponse {
+  google.protobuf.Timestamp ts = 1;
+}
