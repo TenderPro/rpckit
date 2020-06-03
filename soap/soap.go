@@ -2,8 +2,9 @@ package soap
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
+
+	muxer "github.com/gorilla/mux"
 
 	log "go.uber.org/zap"
 
@@ -51,7 +52,7 @@ X-Forwarded-Proto:[http]
 
 */
 
-func (srv Service) SetupRouter(mux *http.ServeMux, client grpcer.Client, WSDL string) {
+func (srv Service) SetupRouter(mux *muxer.Router, client grpcer.Client, WSDL string) {
 	addr := fmt.Sprintf("://%s/%s", srv.Host, srv.Config.Prefix)
 	handler := &soapproxy.SOAPHandler{
 		Client:    client,

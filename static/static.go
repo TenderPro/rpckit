@@ -1,10 +1,12 @@
 package static
 
 import (
+	"io"
 	"mime"
 	"net/http"
-	"os"
-	"strings"
+
+	"github.com/apisite/apitpl/lookupfs"
+	muxer "github.com/gorilla/mux"
 
 	"go.uber.org/zap"
 	log "go.uber.org/zap"
@@ -17,57 +19,54 @@ type Config struct {
 
 // Service holds SOAP service
 type Service struct {
-	Config      *Config
-	Log         *log.Logger
-	ListHandler func() []string
-	DataHandler func(name string) ([]byte, error)
-	InfoHandler func(name string) (os.FileInfo, error)
+	Config *Config
+	Log    *log.Logger
+	fs     lookupfs.FileSystem
 }
 
 // New creates an Service object
 func New(cfg Config, logger *log.Logger,
-	lh func() []string,
-	dh func(name string) ([]byte, error),
-	ih func(name string) (os.FileInfo, error),
+	fs lookupfs.FileSystem,
 ) *Service {
 	return &Service{
-		Config:      &cfg,
-		Log:         logger,
-		ListHandler: lh,
-		DataHandler: dh,
-		InfoHandler: ih,
+		Config: &cfg,
+		Log:    logger,
+		fs:     fs,
 	}
 }
 
 // SetupRouter add routes to mux
-func (srv Service) SetupRouter(mux *http.ServeMux) {
-	for _, v := range srv.ListHandler() {
-		if !strings.HasPrefix(v, srv.Config.Prefix+"/") {
-			continue
-		}
-		uri := strings.TrimPrefix(strings.TrimSuffix(v, "index.html"), srv.Config.Prefix)
-		srv.Log.Info("Serve static", zap.String("uri", uri))
-		mux.HandleFunc(uri, srv.serveStatic(v))
-	}
+func (srv Service) SetupRouter(mux *muxer.Router) {
+	/*
 
+		   TODO: Walk
+		for _, v := range srv.ListHandler() {
+			if !strings.HasPrefix(v, srv.Config.Prefix+"/") {
+				continue
+			}
+			uri := strings.TrimPrefix(strings.TrimSuffix(v, "index.html"), srv.Config.Prefix)
+			srv.Log.Info("Serve static", zap.String("uri", uri))
+			mux.HandleFunc(uri, srv.serveStatic(v))
+		}
+	*/
 }
 
 func (srv Service) serveStatic(name string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		srv.Log.Info("Handle static", zap.String("file", name))
-		data, err := srv.DataHandler(name)
+		data, err := srv.fs.Open(name)
 		if err != nil {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			// TODO: add file info
 			w.Header().Set("Content-Type", mime.TypeByExtension(name))
-			w.Write(data)
+			io.Copy(w, data) // TODO: optimal? errors?
 		}
 	}
 }
 
-// Proxy holds proxied handler
+// Proxy holds proxied handler for grpc-gateway calls
 type Proxy struct {
 	h http.Handler
 }
